@@ -57,26 +57,26 @@ class NewCharacterWindow extends Component {
 				</Modal.Header>
 				<Modal.Body>
 					<InputGroup className="mb-3" as={Row} controlId="name">
-						<Form.Label column sm="2">Name: </Form.Label>
-						<Col sm="10">
+						<Form.Label column sm={3}>Name: </Form.Label>
+						<Col sm={9}>
 							<FormControl placeholder="name" aria-label="Name" onChange= { this.fetchName } />
 						</Col>
 					</InputGroup>
 					<InputGroup className="mb-3" as={Row} controlId="initiative">
-						<Form.Label column sm="2">Initiative: </Form.Label>
-						<Col sm="10">
+						<Form.Label column sm={3}>Initiative: </Form.Label>
+						<Col sm={9}>
 							<FormControl placeholder="initiative" aria-label="Initiative" onChange= { this.fetchInitiative }/>
 						</Col>
 					</InputGroup>
 					<InputGroup className="mb-3" as={Row}>
-						<Form.Label column sm="2">Hit Points: </Form.Label>
-						<Col sm="10">
+						<Form.Label column sm={3}>Hit Points: </Form.Label>
+						<Col sm={9}>
 							<FormControl placeholder="hit points" aria-label="Hit Points" onChange= { this.fetchHitPoints }/>
 						</Col>
 					</InputGroup>
 					<InputGroup className="mb-3" as={Row}>
-						<Form.Label column sm="2">CA: </Form.Label>
-						<Col sm="10">
+						<Form.Label column sm={3}>CA: </Form.Label>
+						<Col sm={9}>
 							<FormControl placeholder="ca" aria-label="CA" onChange= { this.fetchCA }/>
 						</Col>
 					</InputGroup>
@@ -94,12 +94,35 @@ class UploadFileWindow extends Component {
 	constructor() {
 		super()
 		this.state = {
-			content: []
+			content: [],
+			submitEnable: true
 		}
 	}
 
+	getData = (event) => {
+		const input = event.target
+		if ('files' in input && input.files.length > 0) {
+			this.setState({ submitEnable: false })
+			const reader = new FileReader()
+  			return new Promise((resolve, reject) => {
+    			reader.onload = event => resolve(event.target.result)
+    			reader.onerror = error => reject(error)
+    			reader.readAsText(input.files[0])
+  			})
+  			.then(content => {
+  				this.setState({ content: content, submitEnable: true })
+  			}).catch(error => {
+  				console.log(error)
+  				this.setState({ content: [], submitEnable: true })
+  			})
+  		}
+	}
 
 	render = () => {
+		var submitButton = <Button variant="success" onClick={() => this.props.callbackData(this.state.content)} >Submit</Button>
+		if(!this.state.submitEnable) {
+			submitButton = <Button variant="success" onClick={() => this.props.callbackData(this.state.content)} disabled>Submit</Button>
+		}
 		return (
 			<Modal show={ this.props.show } onHide={ () => this.props.onHide({ msg: 'Cross Icon Clicked!' })} size="lg" centered>
 				<Modal.Header>
@@ -107,11 +130,11 @@ class UploadFileWindow extends Component {
 				</Modal.Header>
 				<Modal.Body>
 					<Form>
-						<Form.File id="character-file" label="Search for you character file..." custom/>
+						<Form.File id="character-file" label="Search for you character file..." onChange={this.getData} />
 					</Form>
 				</Modal.Body>
 				<Modal.Footer>
-					<Button variant="success" onClick={() => this.props.onClick( this.getData() )}  >Submit</Button>
+					{ submitButton }
 					<Button variant="danger" onClick={() => this.props.onHide()} >Close</Button>
 				</Modal.Footer>
 			</Modal>
@@ -129,8 +152,8 @@ class App extends Component {
 		}
 	}
 
-	makeCharacter = (array) => {
-		var x = {name: array[1], initiative: array[2], hp: array[3], ca: array[4], initRoll: 0, initTotal: array[2], thp: array[3], tca: array[4] }
+	makeCharacter = (array, idx = 1) => {
+		var x = {name: array[0 + idx], initiative: array[1 + idx], hp: array[2 + idx], ca: array[3 + idx], initRoll: 0, initTotal: array[1 + idx], thp: array[2 + idx], tca: array[3 + idx] }
 		return [x]
 	}
 
@@ -161,7 +184,30 @@ class App extends Component {
 	}
 
 	loadFileCharacters = (content) => {
-		console.log("loadFileCharacters")
+		this.setState({ uploadFileShow: false })
+		content = content.split("\n")
+		console.log("loadFileCharacters", content)
+		if(content.length >= 2) {
+			console.log(content.length)
+			var new_array = []
+			for(var ii = 1; ii < content.length; ii++) {
+				new_array = new_array.concat(this.makeCharacter(content[ii].split(","), 0))
+			}
+			new_array = this.state.characters.concat(new_array)
+
+			function compare(a, b) {
+				if(a.initTotal < b.initTotal) {
+					return 1
+				} else if (a.initTotal > b.initTotal) {
+					return -1
+				} else {
+					return 0
+				}
+			}
+			new_array.sort(compare)
+
+			this.setState({ characters: new_array })
+		}
 	}
 
 	downloadFileCharacters = () => {
@@ -190,6 +236,13 @@ class App extends Component {
 		}
 	}
 
+	clearBoard = () => {
+		var res = window.confirm("Are you sure you want to clear the board?")
+		if(res === true) {
+			this.setState({ characters: [] })
+		}
+	}
+
 
 	createListOfCharacters = () => {
 		if(this.state.characters.length < 1) {
@@ -200,10 +253,10 @@ class App extends Component {
 				</Row>
 		} else {
 			var list = this.state.characters.map( (char, idx) => { return (
-				<ListGroup.Item>
+				<ListGroup.Item key={idx}>
 					<Row>
-						<Col sm={8}><h5>[ { idx + 1 } ] - { char.name }</h5></Col>
-						<Col sm={4} className="text-right">
+						<Col sm={6}><h5>[ { idx + 1 } ] - { char.name }</h5></Col>
+						<Col sm={6} className="text-right">
 							<ButtonGroup>
 								<Button size="sm" variant="outline-danger" onClick={() => console.log("remove")} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
 								<Button size="sm" variant="outline-dark" onClick={() => console.log("update hp")} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
@@ -212,28 +265,28 @@ class App extends Component {
 						</Col>
 					</Row>
 					<Row>
-						<Col sm={2}><FontAwesomeIcon icon={ faTachometerAlt } /> Initiative:</Col>
-						<Col sm={2}>{ char.initiative }</Col>
-						<Col sm={1}></Col>
-						<Col sm={2}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
-						<Col sm={2}>{ char.roll }</Col>
-						<Col sm={3}></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faTachometerAlt } /> Initiative:</Col>
+						<Col sm={1}>{ char.initiative }</Col>
+						<Col></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
+						<Col sm={1}>{ char.roll }</Col>
+						<Col></Col>
 					</Row>
 					<Row>
-						<Col sm={2}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
-						<Col sm={2}>{ char.hp }</Col>
-						<Col sm={1}></Col>
-						<Col sm={2}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
-						<Col sm={2}>{ char.thp }</Col>
-						<Col sm={1}></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
+						<Col sm={1}>{ char.hp }</Col>
+						<Col></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
+						<Col sm={1}>{ char.thp }</Col>
+						<Col></Col>
 					</Row>
 					<Row>
-						<Col sm={2}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
-						<Col sm={2}>{ char.ca }</Col>
-						<Col sm={1}></Col>
-						<Col sm={2}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
-						<Col sm={2}>{ char.tca }</Col>
-						<Col sm={1}></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
+						<Col sm={1}>{ char.ca }</Col>
+						<Col></Col>
+						<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
+						<Col sm={1}>{ char.tca }</Col>
+						<Col></Col>
 					</Row>
 				</ListGroup.Item>
         	) } )
@@ -261,7 +314,7 @@ class App extends Component {
 					<NavDropdown.Item onClick={() => { this.setState({ uploadFileShow: true })}}><FontAwesomeIcon icon={ faFileUpload } /> Load file</NavDropdown.Item>
 					<NavDropdown.Item onClick={this.downloadFileCharacters}><FontAwesomeIcon icon={ faFileDownload } /> Save file</NavDropdown.Item>
 					<NavDropdown.Divider />
-					<NavDropdown.Item href="#"><FontAwesomeIcon icon={ faBroom } /> Clear board</NavDropdown.Item>
+					<NavDropdown.Item onClick={this.clearBoard}><FontAwesomeIcon icon={ faBroom } /> Clear board</NavDropdown.Item>
 				</NavDropdown>
 			</Navbar>
 			<Container>
@@ -272,7 +325,7 @@ class App extends Component {
 				{ this.createListOfCharacters() }
 			</Container>
 			<NewCharacterWindow show={this.state.newCharacterShow} onClick={this.saveNewCharacter} onHide={this.discardNewCharacter} />
-			<UploadFileWindow show={this.state.uploadFileShow} onClick={this.loadFileCharacters} onHide={() => { this.setState({ uploadFileShow: false })}} />
+			<UploadFileWindow show={this.state.uploadFileShow} callbackData={this.loadFileCharacters} onHide={() => { this.setState({ uploadFileShow: false })}} />
 			
 			</div>
 		)

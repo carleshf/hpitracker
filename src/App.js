@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Container, Navbar, NavDropdown, Row, Col, Button, Modal, InputGroup, Form, FormControl, Alert, Card, ListGroup, ButtonGroup } from 'react-bootstrap'
+import { Container, Navbar, NavDropdown, Row, Col, Button, Modal, InputGroup, Form, FormControl, Alert, Card, ListGroup, ButtonGroup, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart } from '@fortawesome/free-solid-svg-icons'
+import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
 
 class NewCharacterWindow extends Component {
 	constructor() {
@@ -56,13 +56,13 @@ class NewCharacterWindow extends Component {
 					<Modal.Title id="contained-modal-title-vcenter">New Character</Modal.Title>
 				</Modal.Header>
 				<Modal.Body>
-					<InputGroup className="mb-3" as={Row} controlId="name">
+					<InputGroup className="mb-3" as={Row}>
 						<Form.Label column sm={3}>Name: </Form.Label>
 						<Col sm={9}>
 							<FormControl placeholder="name" aria-label="Name" onChange= { this.fetchName } />
 						</Col>
 					</InputGroup>
-					<InputGroup className="mb-3" as={Row} controlId="initiative">
+					<InputGroup className="mb-3" as={Row}>
 						<Form.Label column sm={3}>Initiative: </Form.Label>
 						<Col sm={9}>
 							<FormControl placeholder="initiative" aria-label="Initiative" onChange= { this.fetchInitiative }/>
@@ -104,18 +104,18 @@ class UploadFileWindow extends Component {
 		if ('files' in input && input.files.length > 0) {
 			this.setState({ submitEnable: false })
 			const reader = new FileReader()
-  			return new Promise((resolve, reject) => {
-    			reader.onload = event => resolve(event.target.result)
-    			reader.onerror = error => reject(error)
-    			reader.readAsText(input.files[0])
-  			})
-  			.then(content => {
-  				this.setState({ content: content, submitEnable: true })
-  			}).catch(error => {
-  				console.log(error)
-  				this.setState({ content: [], submitEnable: true })
-  			})
-  		}
+			return new Promise((resolve, reject) => {
+				reader.onload = event => resolve(event.target.result)
+				reader.onerror = error => reject(error)
+				reader.readAsText(input.files[0])
+			})
+			.then(content => {
+				this.setState({ content: content, submitEnable: true })
+			}).catch(error => {
+				console.log(error)
+				this.setState({ content: [], submitEnable: false })
+			})
+		}
 	}
 
 	render = () => {
@@ -142,13 +142,67 @@ class UploadFileWindow extends Component {
 	}
 }
 
+class UpdateWindow extends Component {
+	constructor() {
+		super()
+		this.state = {
+			increaseValue: 0,
+			increaseDirection: 1
+		}
+	}
+
+	fetchAmount = (value) => {
+		this.setState({ increaseValue: parseInt(value.target.value.trim()) })
+	}
+
+	render = () => {
+		return (
+			<Modal show={ this.props.show } onHide={ () => this.props.onHide({ msg: 'Cross Icon Clicked!' })} size="lg" centered>
+				<Modal.Header>
+					<Modal.Title id="contained-modal-title-vcenter">{ this.props.title }</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<Row>
+						<Col sm={1}></Col>
+						<Col>Direction</Col>
+						<Col sm={1}></Col>
+						<Col>Amount</Col>
+						<Col></Col>
+					</Row>
+					<Row>
+						<Col sm={1}></Col>
+						<Col>
+							<ToggleButtonGroup type="radio" name="options" defaultValue={1}>
+								<ToggleButton type="radio" name="radio" size="sm" value={-1} onClick={() => this.setState({increaseDirection: -1})}><FontAwesomeIcon icon={ faMinus } /></ToggleButton>
+								<ToggleButton type="radio" name="radio" size="sm" value={1} onClick={() => this.setState({increaseDirection:  1})} defaultChecked ><FontAwesomeIcon icon={ faPlus } /></ToggleButton>
+							</ToggleButtonGroup>
+						</Col>
+						<Col sm={1}></Col>
+						<Col>
+							<FormControl placeholder="absolute quantity" aria-label="Initiative" onChange= { this.fetchAmount }/>
+						</Col>
+						<Col></Col>
+					</Row>
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="success" onClick={() => this.props.callbackData([this.state.increaseValue, this.state.increaseDirection, this.props.selected])} >Submit</Button>
+					<Button variant="danger" onClick={() => this.props.onHide()} >Close</Button>
+				</Modal.Footer>
+			</Modal>
+		)
+	}
+}
+
 class App extends Component {
 	constructor() {
 		super()
 		this.state = {
 			characters: [],
 			newCharacterShow: false,
-			uploadFileShow: false
+			uploadFileShow: false,
+			updateHpShow: false,
+			updateCaShow: false,
+			selected: -1
 		}
 	}
 
@@ -290,8 +344,8 @@ class App extends Component {
 						<Col sm={6} className="text-right">
 							<ButtonGroup>
 								<Button size="sm" variant="outline-danger" onClick={() => this.removeCharacter(idx)} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
-								<Button size="sm" variant="outline-dark" onClick={() => console.log("update hp")} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
-								<Button size="sm" variant="outline-dark" onClick={() => console.log("update ca")} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
+								<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateHpShow: true, selected: idx })} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
+								<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateCaShow: true, selected: idx })} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
 							</ButtonGroup>
 						</Col>
 					</Row>
@@ -334,6 +388,36 @@ class App extends Component {
 		}
 	}
 
+	isNumber = (value) => {
+		return value !== undefined && (typeof value === 'number' && isFinite(value))
+	}
+
+	updateHpValue = (content) => {
+		this.setState({ updateHpShow: false })
+		
+		var value = parseInt(content[0])
+		var direc = parseInt(content[1])
+		var charc = parseInt(content[2])
+
+		if(this.isNumber(value)) {
+			var new_array = this.state.characters
+			new_array[charc].thp += value * direc
+		}
+	}
+
+	updateCaValue = (content) => {
+		this.setState({ updateCaShow: false })
+		
+		var value = parseInt(content[0])
+		var direc = parseInt(content[1])
+		var charc = parseInt(content[2])
+
+		if(this.isNumber(value)) {
+			var new_array = this.state.characters
+			new_array[charc].tca += value * direc
+		}
+	}
+
 	render = () => {
 		return (
 			<div>
@@ -357,6 +441,8 @@ class App extends Component {
 			</Container>
 			<NewCharacterWindow show={this.state.newCharacterShow} onClick={this.saveNewCharacter} onHide={this.discardNewCharacter} />
 			<UploadFileWindow show={this.state.uploadFileShow} callbackData={this.loadFileCharacters} onHide={() => { this.setState({ uploadFileShow: false })}} />
+			<UpdateWindow show={this.state.updateHpShow} selected={this.state.selected} onHide={() => this.setState({ updateHpShow: false })} callbackData={this.updateHpValue} title="Update Hit Points"/>
+			<UpdateWindow show={this.state.updateCaShow} selected={this.state.selected} onHide={() => this.setState({ updateCaShow: false })} callbackData={this.updateCaValue} title="Update CA" />
 			
 			</div>
 		)

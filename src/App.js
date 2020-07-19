@@ -243,6 +243,12 @@ class App extends Component {
 		}
 	}
 
+	removeCharacter = (idx) => {
+		var new_array = this.state.characters
+		new_array.splice(idx, 1)
+		this.setState({ characters: new_array })
+	}
+
 
 	createListOfCharacters = () => {
 		if(this.state.characters.length < 1) {
@@ -258,7 +264,7 @@ class App extends Component {
 						<Col sm={6}><h5>[ { idx + 1 } ] - { char.name }</h5></Col>
 						<Col sm={6} className="text-right">
 							<ButtonGroup>
-								<Button size="sm" variant="outline-danger" onClick={() => console.log("remove")} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
+								<Button size="sm" variant="outline-danger" onClick={() => this.removeCharacter(idx)} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
 								<Button size="sm" variant="outline-dark" onClick={() => console.log("update hp")} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
 								<Button size="sm" variant="outline-dark" onClick={() => console.log("update ca")} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
 							</ButtonGroup>
@@ -269,7 +275,7 @@ class App extends Component {
 						<Col sm={1}>{ char.initiative }</Col>
 						<Col></Col>
 						<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
-						<Col sm={1}>{ char.roll }</Col>
+						<Col sm={1}>{ char.initRoll }</Col>
 						<Col></Col>
 					</Row>
 					<Row>

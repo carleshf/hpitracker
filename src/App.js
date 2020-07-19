@@ -249,6 +249,31 @@ class App extends Component {
 		this.setState({ characters: new_array })
 	}
 
+	rollInitiative = () => {
+		console.log("rollInitiative")
+		var new_array = this.state.characters
+		for(var ii = 0; ii < new_array.length; ii++) {
+			let dice = Math.floor((Math.random() * 20) + 1)
+			let init = parseInt(new_array[ii].initiative)
+			let res = dice + init 
+			new_array[ii].initTot = res
+			new_array[ii].initRoll = res + " (" + dice + ")"
+		}
+
+		function compare(a, b) {
+			if(a.initTot < b.initTot) {
+				return 1
+			} else if (a.initTot > b.initTot) {
+				return -1
+			} else {
+				return 0
+			}
+		}
+		new_array.sort(compare)
+
+		this.setState({ characters: new_array })
+	}
+
 
 	createListOfCharacters = () => {
 		if(this.state.characters.length < 1) {
@@ -326,7 +351,7 @@ class App extends Component {
 			<Container>
 				<Row>&nbsp;</Row>
 				<Row><Col><Alert variant="info"><h4>List of characters</h4></Alert></Col></Row>
-				<Row><Col sm={10}></Col><Col sm={2} className="text-right"><Button size="sm" variant="outline-dark" onClick={() => console.log("roll initiative")} ><FontAwesomeIcon icon={ faDiceD20 } /> Roll initiative</Button></Col></Row>
+				<Row><Col sm={10}></Col><Col sm={2} className="text-right"><Button size="sm" variant="outline-dark" onClick={this.rollInitiative} ><FontAwesomeIcon icon={ faDiceD20 } /> Roll initiative</Button></Col></Row>
 				<Row>&nbsp;</Row>
 				{ this.createListOfCharacters() }
 			</Container>

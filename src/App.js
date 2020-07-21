@@ -45,7 +45,12 @@ class NewCharacterWindow extends Component {
 		let result_state_hitpoints = this.isNumber(parseInt(this.state.hitpoints))
 		let result_state_ca = this.isNumber(parseInt(this.state.ca))
 		let result_state = result_state_name && result_state_initiative && result_state_hitpoints && result_state_ca
-		let x = [result_state, this.state.name, parseInt(this.state.initiative), parseInt(this.state.hitpoints), parseInt(this.state.ca), this.state.npc]
+		let x = [result_state, this.state.name, parseInt(this.state.initiative),
+			parseInt(this.state.hitpoints), parseInt(this.state.ca),
+			parseInt(this.state.initiative), parseInt(this.state.initiative),
+			parseInt(this.state.hitpoints), parseInt(this.state.ca), 
+			this.state.npc ? "true" : "false"
+		]
 		
 		if(result_state) {
 			this.setState({name: undefined,		initiative: undefined,
@@ -53,7 +58,7 @@ class NewCharacterWindow extends Component {
 				npc: false
 			})
 		}
-		console.log("getData => ", x, [result_state_name , result_state_initiative , result_state_hitpoints , result_state_ca ])
+		console.log("getData => ", x, [result_state_name , result_state_initiative, result_state_hitpoints, result_state_ca ])
 		return x
 	}
 
@@ -276,11 +281,11 @@ class App extends Component {
 	}
 
 	makeCharacter = (array, idx = 1) => {
-		var x = { name: array[0 + idx],		initiative: parseInt(array[1 + idx]), 
-			hp: parseInt(array[2 + idx]), 	ca: parseInt(array[3 + idx]), 
-			initRoll: 0, 					initTotal: parseInt(array[1 + idx]), 
-			thp: parseInt(array[2 + idx]), 	tca: parseInt(array[3 + idx]),
-			npc: (array[8 + idx] === "true" | array[8 + idx] === "True" | array[8 + idx] === "TRUE") }
+		var x = { name: array[0 + idx],			initiative: parseInt(array[1 + idx]), 
+			hp: parseInt(array[2 + idx]), 		ca: parseInt(array[3 + idx]), 
+			initRoll: parseInt(array[4 + idx]), initTotal: parseInt(array[5 + idx]), 
+			thp: parseInt(array[6 + idx]), 		tca: parseInt(array[7 + idx]),
+			npc: array[8 + idx].toLowerCase() }
 		return [x]
 	}
 
@@ -424,7 +429,8 @@ class App extends Component {
 				</Row>
 		} else {
 			var list = this.state.characters.map( (char, idx) => { 
-				if(char.npc) {
+				console.log("Character: ", char)
+				if(char.npc === "true") {
 					var tpca = <Tooltip id="tooltip"><strong>Temp CA: { char.tca }, (CA: {char.ca})</strong></Tooltip>
 					var tpin = <Tooltip id="tooltip"><strong>Initiative: { char.initiative }; Roll: { char.initRoll }</strong></Tooltip>
 					return (

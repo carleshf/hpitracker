@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
-import { Container, Navbar, NavDropdown, Row, Col, Button, Modal, InputGroup, Form, FormControl, Alert, Card, ListGroup, ButtonGroup, ToggleButtonGroup, ToggleButton } from 'react-bootstrap'
+import { Container, Navbar, NavDropdown, Row, Col, Button, Modal, InputGroup, Form, FormControl, Alert, Card, ListGroup, ButtonGroup, ToggleButtonGroup, ToggleButton, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart, faPlus, faMinus } from '@fortawesome/free-solid-svg-icons'
+import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart, faPlus, faMinus, faUserTag, faSearch } from '@fortawesome/free-solid-svg-icons'
 
 class NewCharacterWindow extends Component {
 	constructor() {
@@ -10,7 +10,8 @@ class NewCharacterWindow extends Component {
 			name: undefined,
 			initiative: undefined,
 			hitpoints: undefined,
-			ca: undefined
+			ca: undefined,
+			npc: false
 		}
 	}
 
@@ -44,14 +45,22 @@ class NewCharacterWindow extends Component {
 		let result_state_hitpoints = this.isNumber(parseInt(this.state.hitpoints))
 		let result_state_ca = this.isNumber(parseInt(this.state.ca))
 		let result_state = result_state_name && result_state_initiative && result_state_hitpoints && result_state_ca
+		let x = [result_state, this.state.name, parseInt(this.state.initiative), parseInt(this.state.hitpoints), parseInt(this.state.ca), this.state.npc]
 		
-		return [result_state, this.state.name, parseInt(this.state.initiative), parseInt(this.state.hitpoints), parseInt(this.state.ca)]
+		if(result_state) {
+			this.setState({name: undefined,		initiative: undefined,
+				hitpoints: undefined,				ca: undefined,
+				npc: false
+			})
+		}
+		console.log("getData => ", x, [result_state_name , result_state_initiative , result_state_hitpoints , result_state_ca ])
+		return x
 	}
 
 
 	render = () => {
 		return (
-			<Modal show={ this.props.show } onHide={ () => this.props.onHide({ msg: 'Cross Icon Clicked!' })} size="lg" centered>
+			<Modal show={ this.props.show } onHide={ () => this.props.onHide()} size="lg" centered>
 				<Modal.Header>
 					<Modal.Title id="contained-modal-title-vcenter">New Character</Modal.Title>
 				</Modal.Header>
@@ -80,9 +89,68 @@ class NewCharacterWindow extends Component {
 							<FormControl placeholder="ca" aria-label="CA" onChange= { this.fetchCA }/>
 						</Col>
 					</InputGroup>
+					<InputGroup className="mb-3" as={Row}>
+						<Col></Col>
+						<Col sm={2}>
+							<Form.Group controlId="formBasicCheckbox">
+								<Form.Check type="switch" id="custom-switch" label="NPC" onChange={() => this.setState({ npc: !this.state.npc })} />
+							</Form.Group>
+						</Col>
+					</InputGroup>
 				</Modal.Body>
 				<Modal.Footer>
-					<Button variant="success" onClick={() => this.props.onClick( this.getData() )}  >Submit</Button>
+					<Button variant="success" onClick={() => this.props.onClick( this.getData() )}  >Add</Button>
+					<Button variant="danger" onClick={() => this.props.onHide()} >Close</Button>
+				</Modal.Footer>
+			</Modal>
+		)
+	}
+}
+
+class RenameCharacterWindow extends Component {
+	constructor() {
+		super()
+		this.state = {
+			name: undefined
+		}
+	}
+
+	isString = (value) => {
+		return value !== undefined && (typeof value === 'string' || value instanceof String)
+	}
+
+	fetchName = (value) => {
+		this.setState({ name: value.target.value.trim() })
+	}
+
+	getData = () => {
+		let result_state_name = this.isString(this.state.name) && this.state.name.length > 2
+		
+		if(result_state_name) {
+			this.setState({ name: undefined })
+		}
+
+		console.log("getData (rename) => ", this.state.name, [result_state_name])
+		return [result_state_name, this.state.name]
+	}
+
+
+	render = () => {
+		return (
+			<Modal show={ this.props.show } onHide={() => this.props.onHide() } size="lg" centered>
+				<Modal.Header>
+					<Modal.Title id="contained-modal-title-vcenter">Rename Character</Modal.Title>
+				</Modal.Header>
+				<Modal.Body>
+					<InputGroup className="mb-3" as={Row}>
+						<Form.Label column sm={3}>Name: </Form.Label>
+						<Col sm={9}>
+							<FormControl placeholder="name" aria-label="Name" onChange= { this.fetchName } />
+						</Col>
+					</InputGroup>
+				</Modal.Body>
+				<Modal.Footer>
+					<Button variant="success" onClick={() => this.props.onClick( this.getData() )}  >Rename</Button>
 					<Button variant="danger" onClick={() => this.props.onHide()} >Close</Button>
 				</Modal.Footer>
 			</Modal>
@@ -202,12 +270,18 @@ class App extends Component {
 			uploadFileShow: false,
 			updateHpShow: false,
 			updateCaShow: false,
+			updateRenameShow: false,
 			selected: -1
 		}
 	}
 
 	makeCharacter = (array, idx = 1) => {
-		var x = {name: array[0 + idx], initiative: array[1 + idx], hp: array[2 + idx], ca: array[3 + idx], initRoll: 0, initTotal: array[1 + idx], thp: array[2 + idx], tca: array[3 + idx] }
+		var x = { name: array[0 + idx],		initiative: array[1 + idx], 
+			hp: array[2 + idx], 			ca: array[3 + idx], 
+			initRoll: 0, 					initTotal: array[1 + idx], 
+			thp: array[2 + idx], 			tca: array[3 + idx],
+			npc: array[4 + idx] }
+		console.log("x: ", x)
 		return [x]
 	}
 
@@ -328,6 +402,19 @@ class App extends Component {
 		this.setState({ characters: new_array })
 	}
 
+	saveRenameCharacter = (content) => {
+		this.setState({ updateRenameShow: !content[0] })
+		if(content[0]) {
+			var new_array = this.state.characters
+			new_array[this.state.selected].name = content[1]
+			this.setState({ characters: new_array })
+		}
+
+	}
+	discardRenameCharacter = () => {
+		this.setState({ updateRenameShow: false })
+	}
+
 
 	createListOfCharacters = () => {
 		if(this.state.characters.length < 1) {
@@ -337,45 +424,91 @@ class App extends Component {
 					</Col>
 				</Row>
 		} else {
-			var list = this.state.characters.map( (char, idx) => { return (
-				<ListGroup.Item key={idx}>
-					<Row>
-						<Col sm={6}><h5>[ { idx + 1 } ] - { char.name }</h5></Col>
-						<Col sm={6} className="text-right">
-							<ButtonGroup>
-								<Button size="sm" variant="outline-danger" onClick={() => this.removeCharacter(idx)} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
-								<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateHpShow: true, selected: idx })} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
-								<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateCaShow: true, selected: idx })} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
-							</ButtonGroup>
-						</Col>
-					</Row>
-					<Row>
-						<Col sm={3}><FontAwesomeIcon icon={ faTachometerAlt } /> Initiative:</Col>
-						<Col sm={1}>{ char.initiative }</Col>
-						<Col></Col>
-						<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
-						<Col sm={1}>{ char.initRoll }</Col>
-						<Col></Col>
-					</Row>
-					<Row>
-						<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
-						<Col sm={1}>{ char.hp }</Col>
-						<Col></Col>
-						<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
-						<Col sm={1}>{ char.thp }</Col>
-						<Col></Col>
-					</Row>
-					<Row>
-						<Col sm={3}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
-						<Col sm={1}>{ char.ca }</Col>
-						<Col></Col>
-						<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
-						<Col sm={1}>{ char.tca }</Col>
-						<Col></Col>
-					</Row>
-				</ListGroup.Item>
-        	) } )
-        	
+			var list = this.state.characters.map( (char, idx) => { 
+				if(char.npc) {
+					var tpca = <Tooltip id="tooltip"><strong>Temp CA: { char.tca }, (CA: {char.ca})</strong></Tooltip>
+					var tpin = <Tooltip id="tooltip"><strong>Initiative: { char.initiative }; Roll: { char.initRoll }</strong></Tooltip>
+					return (
+						<ListGroup.Item key={idx}>
+							<Row>
+								<Col sm={6}><h5>[ { idx + 1 } ] - { char.name } (NPC)</h5></Col>
+								<Col sm={6} className="text-right">
+									<ButtonGroup>
+										<Button size="sm" variant="outline-danger" onClick={() => this.removeCharacter(idx)} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
+										<Button size="sm" variant="outline-info" onClick={() => this.setState({ updateRenameShow: true, selected: idx })} ><FontAwesomeIcon icon={ faUserTag } /> Rename</Button>
+										<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateHpShow: true, selected: idx })} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
+										<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateCaShow: true, selected: idx })} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
+									</ButtonGroup>
+								</Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
+								<Col sm={3}>
+									{ char.initTot } <OverlayTrigger placement="right" delay={{ show: 250, hide: 400 }} overlay={ tpin }>
+										<Button size="sm" variant="outline-info"><FontAwesomeIcon icon={ faSearch } /></Button>
+									</OverlayTrigger>
+								</Col>
+								<Col></Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
+								<Col sm={3}>{ char.hp - char.thp }</Col>
+								<Col></Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
+								<Col sm={3}>
+									<OverlayTrigger placement="right" delay={{ show: 250, hide: 400 }} overlay={ tpca }>
+										<Button size="sm" variant="outline-info"><FontAwesomeIcon icon={ faSearch } /></Button>
+									</OverlayTrigger>
+								</Col>
+								<Col></Col>
+							</Row>
+						</ListGroup.Item>
+					)
+				} else {
+					return (
+						<ListGroup.Item key={idx}>
+							<Row>
+								<Col sm={6}><h5>[ { idx + 1 } ] - { char.name }</h5></Col>
+								<Col sm={6} className="text-right">
+									<ButtonGroup>
+										<Button size="sm" variant="outline-danger" onClick={() => this.removeCharacter(idx)} ><FontAwesomeIcon icon={ faTrash } /> Remove</Button>
+										<Button size="sm" variant="outline-info" onClick={() => this.setState({ updateRenameShow: true, selected: idx })} ><FontAwesomeIcon icon={ faUserTag } /> Rename</Button>
+										<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateHpShow: true, selected: idx })} ><FontAwesomeIcon icon={ faMedkit } /> Update</Button>
+										<Button size="sm" variant="outline-dark" onClick={() => this.setState({ updateCaShow: true, selected: idx })} ><FontAwesomeIcon icon={ faBurn } /> Update</Button>
+									</ButtonGroup>
+								</Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faTachometerAlt } /> Initiative:</Col>
+								<Col sm={1}>{ char.initiative }</Col>
+								<Col></Col>
+								<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
+								<Col sm={1}>{ char.initRoll }</Col>
+								<Col></Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
+								<Col sm={1}>{ char.hp }</Col>
+								<Col></Col>
+								<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
+								<Col sm={1}>{ char.thp }</Col>
+								<Col></Col>
+							</Row>
+							<Row>
+								<Col sm={3}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
+								<Col sm={1}>{ char.ca }</Col>
+								<Col></Col>
+								<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
+								<Col sm={1}>{ char.tca }</Col>
+								<Col></Col>
+							</Row>
+						</ListGroup.Item>
+					)
+				}
+			} )
+
 			return <Row className="text-left">
 					<Col>
 						<Card>
@@ -443,7 +576,7 @@ class App extends Component {
 			<UploadFileWindow show={this.state.uploadFileShow} callbackData={this.loadFileCharacters} onHide={() => { this.setState({ uploadFileShow: false })}} />
 			<UpdateWindow show={this.state.updateHpShow} selected={this.state.selected} onHide={() => this.setState({ updateHpShow: false })} callbackData={this.updateHpValue} title="Update Hit Points"/>
 			<UpdateWindow show={this.state.updateCaShow} selected={this.state.selected} onHide={() => this.setState({ updateCaShow: false })} callbackData={this.updateCaValue} title="Update CA" />
-			
+			<RenameCharacterWindow show={this.state.updateRenameShow} onClick={this.saveRenameCharacter} onHide={this.discardRenameCharacter} />
 			</div>
 		)
 	}

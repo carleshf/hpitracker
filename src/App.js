@@ -276,12 +276,11 @@ class App extends Component {
 	}
 
 	makeCharacter = (array, idx = 1) => {
-		var x = { name: array[0 + idx],		initiative: array[1 + idx], 
-			hp: array[2 + idx], 			ca: array[3 + idx], 
-			initRoll: 0, 					initTotal: array[1 + idx], 
-			thp: array[2 + idx], 			tca: array[3 + idx],
-			npc: array[4 + idx] }
-		console.log("x: ", x)
+		var x = { name: array[0 + idx],		initiative: parseInt(array[1 + idx]), 
+			hp: parseInt(array[2 + idx]), 	ca: parseInt(array[3 + idx]), 
+			initRoll: 0, 					initTotal: parseInt(array[1 + idx]), 
+			thp: parseInt(array[2 + idx]), 	tca: parseInt(array[3 + idx]),
+			npc: (array[8 + idx] === "true" | array[8 + idx] === "True" | array[8 + idx] === "TRUE") }
 		return [x]
 	}
 

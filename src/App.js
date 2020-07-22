@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import { Container, Navbar, NavDropdown, Row, Col, Button, Modal, InputGroup, Form, FormControl, Alert, Card, ListGroup, ButtonGroup, ToggleButtonGroup, ToggleButton, OverlayTrigger, Tooltip } from 'react-bootstrap'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart, faPlus, faMinus, faUserTag, faSearch } from '@fortawesome/free-solid-svg-icons'
+import { faUserPlus, faFileUpload, faFileDownload, faBroom, faTachometerAlt, faHeart, faShieldAlt, faDice, faDiceD20, faMedkit, faBurn, faTrash, faHourglassStart, faPlus, faMinus, faUserTag, faSearch, faSkullCrossbones } from '@fortawesome/free-solid-svg-icons'
 
 class NewCharacterWindow extends Component {
 	constructor() {
@@ -430,6 +430,10 @@ class App extends Component {
 		} else {
 			var list = this.state.characters.map( (char, idx) => { 
 				console.log("Character: ", char)
+				var death = ""
+				if(char.thp <= 0) {
+					death = <FontAwesomeIcon icon={ faSkullCrossbones } />
+				}
 				if(char.npc === "true") {
 					var tpca = <Tooltip id="tooltip"><strong>Temp CA: { char.tca }, (CA: {char.ca})</strong></Tooltip>
 					var tpin = <Tooltip id="tooltip"><strong>Initiative: { char.initiative }; Roll: { char.initRoll }</strong></Tooltip>
@@ -457,8 +461,8 @@ class App extends Component {
 							</Row>
 							<Row>
 								<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
-								<Col sm={3}>{ char.hp - char.thp }</Col>
-								<Col></Col>
+								<Col sm={3}>{ char.hp - char.thp }{  death }</Col>
+								<Col></Col> 
 							</Row>
 							<Row>
 								<Col sm={3}><FontAwesomeIcon icon={ faShieldAlt }/> CA:</Col>
@@ -487,18 +491,18 @@ class App extends Component {
 							</Row>
 							<Row>
 								<Col sm={3}><FontAwesomeIcon icon={ faTachometerAlt } /> Initiative:</Col>
-								<Col sm={1}>{ char.initiative }</Col>
+								<Col sm={2}>{ char.initiative }</Col>
 								<Col></Col>
 								<Col sm={3}><FontAwesomeIcon icon={ faDice } /> Initiative:</Col>
-								<Col sm={1}>{ char.initRoll }</Col>
+								<Col sm={2}>{ char.initRoll }</Col>
 								<Col></Col>
 							</Row>
 							<Row>
 								<Col sm={3}><FontAwesomeIcon icon={ faHeart } /> Hit Points:</Col>
-								<Col sm={1}>{ char.hp }</Col>
+								<Col sm={2}>{ char.hp }</Col>
 								<Col></Col>
 								<Col sm={3}><FontAwesomeIcon icon={ faHourglassStart } /> Current:</Col>
-								<Col sm={1}>{ char.thp }</Col>
+								<Col sm={2}>{ char.thp }{ death }</Col>
 								<Col></Col>
 							</Row>
 							<Row>
